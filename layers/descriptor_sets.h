@@ -122,7 +122,8 @@ class DescriptorSetLayout {
     uint32_t GetGlobalEndIndexFromBinding(const uint32_t) const;
     // For a particular binding starting at offset and having update_count descriptors
     //  updated, verify that for any binding boundaries crossed, the update is consistent
-    bool VerifyUpdateConsistency(uint32_t, uint32_t, uint32_t, const char *, const VkDescriptorSet, std::string *) const;
+    bool VerifyUpdateConsistency(uint32_t, uint32_t, uint32_t, const char *, const VkDescriptorSet, UNIQUE_VALIDATION_ERROR_CODE *,
+                                 std::string *) const;
 
   private:
     VkDescriptorSetLayout layout_;
@@ -358,7 +359,8 @@ class DescriptorSet : public BASE_NODE {
     bool IsUpdated() const { return some_update_; };
 
   private:
-    bool VerifyWriteUpdateContents(const VkWriteDescriptorSet *, const uint32_t, std::string *) const;
+    bool VerifyWriteUpdateContents(const VkWriteDescriptorSet *, const uint32_t, UNIQUE_VALIDATION_ERROR_CODE *,
+                                   std::string *) const;
     bool VerifyCopyUpdateContents(const VkCopyDescriptorSet *, const DescriptorSet *, VkDescriptorType, uint32_t,
                                   std::string *) const;
     bool ValidateBufferUsage(BUFFER_NODE const *, VkDescriptorType, std::string *) const;
