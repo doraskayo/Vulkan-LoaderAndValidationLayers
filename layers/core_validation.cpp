@@ -162,6 +162,7 @@ struct layer_data {
     unordered_map<VkRenderPass, unique_ptr<RENDER_PASS_STATE>> renderPassMap;
     unordered_map<VkShaderModule, unique_ptr<shader_module>> shaderModuleMap;
     VkDevice device = VK_NULL_HANDLE;
+    VkPhysicalDevice gpu = VK_NULL_HANDLE;
 
     instance_layer_data *instance_data = nullptr;  // from device to enclosing instance
 
@@ -4534,6 +4535,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDevice(VkPhysicalDevice gpu, const VkDevice
     // Setup device dispatch table
     layer_init_device_dispatch_table(*pDevice, &my_device_data->dispatch_table, fpGetDeviceProcAddr);
     my_device_data->device = *pDevice;
+    my_device_data->gpu = gpu;
 
     my_device_data->report_data = layer_debug_report_create_device(my_instance_data->report_data, *pDevice);
     checkDeviceRegisterExtensions(pCreateInfo, *pDevice);
