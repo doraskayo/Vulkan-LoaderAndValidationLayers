@@ -11424,6 +11424,8 @@ VKAPI_ATTR VkResult VKAPI_CALL QueuePresentKHR(VkQueue queue, const VkPresentInf
     bool skip_call = false;
 
     std::lock_guard<std::mutex> lock(global_lock);
+    auto queue_state = getQueueNode(dev_data, queue);
+
     for (uint32_t i = 0; i < pPresentInfo->waitSemaphoreCount; ++i) {
         auto pSemaphore = getSemaphoreNode(dev_data, pPresentInfo->pWaitSemaphores[i]);
         if (pSemaphore && !pSemaphore->signaled) {
@@ -11468,6 +11470,28 @@ VKAPI_ATTR VkResult VKAPI_CALL QueuePresentKHR(VkQueue queue, const VkPresentInf
                                             string_VkImageLayout(layout));
                         }
                     }
+                }
+            }
+
+            // All physical devices and queue families are required to be able
+            // to present to any native window on Android; require the
+            // application to have established support on any other platform.
+            if (!dev_data->instance_data->androidSurfaceExtensionEnabled) {
+                auto surface_state = getSurfaceState(dev_data->instance_data, swapchain_data->createInfo.surface);
+                auto support_it = surface_state->gpu_queue_support.find({dev_data->gpu, queue_state->queueFamilyIndex});
+
+                if (support_it == surface_state->gpu_queue_support.end()) {
+                    skip_call |=
+                        log_msg(dev_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT,
+                                reinterpret_cast<uint64_t const &>(pPresentInfo->pSwapchains[i]), __LINE__,
+                                DRAWSTATE_SWAPCHAIN_UNSUPPORTED_QUEUE, "DS", "vkQueuePresentKHR: Presenting image without calling "
+                                                                             "vkGetPhysicalDeviceSurfaceSupportKHR");
+                } else if (!support_it->second) {
+                    skip_call |= log_msg(
+                        dev_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT,
+                        reinterpret_cast<uint64_t const &>(pPresentInfo->pSwapchains[i]), __LINE__,
+                        DRAWSTATE_SWAPCHAIN_UNSUPPORTED_QUEUE, "DS", "vkQueuePresentKHR: Presenting image on queue that cannot "
+                                                                     "present to this surface");
                 }
             }
         }
