@@ -2475,7 +2475,7 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     swapchain_create_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT,
-                                         "called before calling vkGetPhysicalDeviceSurfaceCapabilitiesKHR().");
+                                         "surface capabilities not retrieved");
     err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info, NULL, &swapchain);
     pass = (err != VK_SUCCESS);
     ASSERT_TRUE(pass);
