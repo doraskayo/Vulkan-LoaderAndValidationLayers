@@ -5768,10 +5768,29 @@ static void RemoveBufferMemoryRange(uint64_t handle, DEVICE_MEM_INFO *mem_info) 
 
 static void RemoveImageMemoryRange(uint64_t handle, DEVICE_MEM_INFO *mem_info) { RemoveMemoryRange(handle, mem_info, true); }
 
+static bool PreCallValidateDestroyBuffer(layer_data *dev_data, VkBuffer buffer, BUFFER_NODE **buffer_state, VK_OBJECT *obj_struct) {
+    if (dev_data->instance_state->disabled.destroy_buffer)
+        return false;
+    bool skip = false;
+    *buffer_state = getBufferNode(dev_data, buffer);
+    if (*buffer_state) {
+        *obj_struct = {reinterpret_cast<uint64_t &>(buffer), VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT};
+        skip |= ValidateObjectNotInUse(dev_data, *buffer_state, *obj_struct, VALIDATION_ERROR_00676);
+    }
+    return skip;
+}
+
+static void PostCallRecordDestroyBuffer(layer_data *dev_data, VkBuffer buffer, BUFFER_NODE *buffer_state, VK_OBJECT obj_struct) {
+    
+}
+
 VKAPI_ATTR void VKAPI_CALL DestroyBuffer(VkDevice device, VkBuffer buffer,
                                          const VkAllocationCallbacks *pAllocator) {
     layer_data *dev_data = get_my_data_ptr(get_dispatch_key(device), layer_data_map);
+    BUFFER_NODE *buffer_state = nullptr;
+    VK_OBJECT obj_struct;
     std::unique_lock<std::mutex> lock(global_lock);
+    bool skip = PreCallValidateDestroyBuffer(dev_data, buffer, &buffer_state, &obj_struct);
     if (!validateIdleBuffer(dev_data, buffer)) {
         // Clean up memory binding and range information for buffer
         auto buff_node = getBufferNode(dev_data, buffer);
