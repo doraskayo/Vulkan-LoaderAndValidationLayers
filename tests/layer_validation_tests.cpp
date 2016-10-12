@@ -2117,6 +2117,7 @@ TEST_F(VkLayerTest, NonCoherentMemoryMapping) {
     vkFreeMemory(m_device->device(), mem, NULL);
 }
 
+#if 0   // disabled until PV gets real extension entrypoint enable checks.
 TEST_F(VkLayerTest, EnableWsiBeforeUse) {
     VkResult err;
     bool pass;
@@ -2344,6 +2345,7 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
     vkDestroySwapchainKHR(m_device->device(), swapchain, NULL);
     m_errorMonitor->VerifyFound();
 }
+#endif
 
 TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
 
